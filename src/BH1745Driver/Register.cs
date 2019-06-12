@@ -13,16 +13,11 @@ namespace BH1745Driver
         MODE_CONTROL3 = 0x44,
 
         // data registers
-        RED_DATA_LSBs = 0x50,
-        RED_DATA_MSBs = 0x51,
-        GREEN_DATA_LSBs = 0x52,
-        GREEN_DATA_MSBs = 0x53,
-        BLUE_DATA_LSBs = 0x54,
-        BLUE_DATA_MSBs = 0x55,
-        CLEAR_DATA_LSBs = 0x56,
-        CLEAR_DATA_MSBs = 0x57,
-        DINT_DATA_LSBs = 0x58, // not necessary
-        DINT_DATA_MSBs = 0x59, // not necessary
+        RED_DATA = 0x50,
+        GREEN_DATA = 0x52,
+        BLUE_DATA = 0x54,
+        CLEAR_DATA = 0x56,
+        DINT_DATA = 0x58, // not necessary
 
         // setting registers
         INTERRUPT = 0x60,
