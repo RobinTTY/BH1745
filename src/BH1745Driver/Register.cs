@@ -24,10 +24,8 @@ namespace BH1745Driver
         PERSISTENCE = 0x61,
 
         // threshold registers
-        TH_LSBs = 0x62,
-        TH_MSBs = 0x63,
-        TL_LSBs = 0x64,
-        TL_MSBs = 0x65,
+        TH = 0x62,
+        TL = 0x64,
 
         // id register
         MANUFACTURER_ID = 0x92
