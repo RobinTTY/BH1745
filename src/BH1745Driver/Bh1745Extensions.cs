@@ -4,8 +4,16 @@ using System.Text;
 
 namespace BH1745Driver
 {
+    /// <summary>
+    /// Extension methods for the Bh1745 sensor.
+    /// </summary>
     public static class Bh1745Extensions
     {
+        /// <summary>
+        /// Converts the enum Measurement time to an integer representing the measurement time in ms.
+        /// </summary>
+        /// <param name="time">The MeasurementTime.</param>
+        /// <returns></returns>
         public static int ToMilliseconds(this MeasurementTime time)
         {
             switch (time)

@@ -3,6 +3,20 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <Authors>Robin Mueller</Authors>
+    <Company />
+    <Product></Product>
+    <Description>Driver for the BH1745 digital color sensor. Covers all available operations on this sensor.</Description>
+    <Copyright>© Robin Mueller</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/RobinTTY/BH1745</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/RobinTTY/BH1745</RepositoryUrl>
+    <PackageTags>ROHM Bh1745 Sensor Color IoT I²C</PackageTags>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>F:\misc\BH1745\src\BH1745Driver\Bh1745Driver.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,6 +3,9 @@ using System.Drawing;
 
 namespace BH1745Driver
 {
+    /// <summary>
+    /// Color values measured from a Bh1745 sensor.
+    /// </summary>
     public class Bh1745Color
     {
         /// <summary>
@@ -53,6 +56,10 @@ namespace BH1745Driver
             return new Bh1745Color(redScaled, greenScaled, blueScaled, Clear);
         }
 
+        /// <summary>
+        /// Converts the Bh1745Color to a Color.
+        /// </summary>
+        /// <returns></returns>
         public Color ToColor()
         {
             var scaledColor = GetScaled();

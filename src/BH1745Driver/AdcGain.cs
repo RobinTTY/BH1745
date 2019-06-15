@@ -1,5 +1,8 @@
 ﻿namespace BH1745Driver
 {
+    /// <summary>
+    /// Represents the available ADC gain options for the Bh1745.
+    /// </summary>
     public enum AdcGain
     {
         /// <summary>

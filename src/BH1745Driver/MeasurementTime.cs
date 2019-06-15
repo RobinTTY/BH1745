@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BH1745Driver
+﻿namespace BH1745Driver
 {
+    /// <summary>
+    /// Represents the available measurement times for the Bh1745.
+    /// </summary>
     public enum MeasurementTime : byte
     {
         /// <summary>

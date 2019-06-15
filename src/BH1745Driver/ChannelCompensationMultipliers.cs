@@ -1,5 +1,8 @@
 ﻿namespace BH1745Driver
 {
+    /// <summary>
+    /// Channel compensation multipliers used to compensate the 4 color channels of the Bh1745.
+    /// </summary>
     public class ChannelCompensationMultipliers
     {
         /// <summary>

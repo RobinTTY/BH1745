@@ -1,5 +1,8 @@
 ﻿namespace BH1745Driver
 {
+    /// <summary>
+    /// Represents the configuration for the interrupt persistance functionality of the Bh1745.
+    /// </summary>
     public enum InterruptPersistence : byte
     {
         /// <summary>

@@ -1,5 +1,8 @@
 ﻿namespace BH1745Driver
 {
+    /// <summary>
+    /// Represents the interrupt source which is one of the 4 color channels of the Bh1745.
+    /// </summary>
     public enum InterruptSource : byte
     {
         /// <summary>
