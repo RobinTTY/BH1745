@@ -1,7 +1,4 @@
-﻿// TODO: clarify API surface
-// TODO: headers, examples
-
-using System;
+﻿using System;
 using System.Buffers.Binary;
 using System.Device.I2c;
 using System.Diagnostics;
@@ -41,7 +38,7 @@ namespace BH1745Driver
             {
                 var status = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
                 status = (byte)(status & ((byte)Mask.SW_RESET ^ (byte)Mask.CLR));
-                status = (byte)(status | 0x01 << 7);
+                status = (byte)(status | Convert.ToByte(value) << 7);
 
                 Write8BitsToRegister((byte)Register.SYSTEM_CONTROL, status);
             }
@@ -49,22 +46,20 @@ namespace BH1745Driver
 
         /// <summary>
         /// Gets or sets the state of the interrupt pin.
-        /// False is the default state in which the interrupt pin is not initialized (active).
-        /// True is used to set the pin to high impedance (inactive).
         /// </summary>
-        public bool InterruptReset
+        public InterruptStatus InterruptReset
         {
             get
             {
                 var intReset = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
                 intReset = (byte)((intReset & (byte)Mask.INT_RESET) >> 6);
-                return Convert.ToBoolean(intReset);
+                return (InterruptStatus)intReset;
             }
             set
             {
                 var intReset = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
                 intReset = (byte)(intReset & ((byte)Mask.INT_RESET ^ (byte)Mask.CLR));
-                intReset = (byte)(intReset | Convert.ToByte(value) << 6);
+                intReset = (byte)(intReset | (byte)value << 6);
 
                 Write8BitsToRegister((byte)Register.SYSTEM_CONTROL, intReset);
             }
@@ -147,10 +142,9 @@ namespace BH1745Driver
         }
 
         /// <summary>
-        /// Gets or sets the status of the interrupt signal.
-        /// True indicates an active interrupt signal, false an inactive signal.
+        /// Gets or sets whether the interrupt signal is active.
         /// </summary>
-        public bool InterruptStatus
+        public bool InterruptSignalIsActive
         {
             get
             {
@@ -170,22 +164,20 @@ namespace BH1745Driver
 
         /// <summary>
         /// Gets or sets how the interrupt pin latches.
-        /// False indicates that the interrupt pin is latched until interrupt register is read
-        /// or initialized. True indicates that the pin is latched after each measurement.
         /// </summary>
-        public bool InterruptLatch
+        public InterruptLatch InterruptLatch
         {
             get
             {
                 var intLatch = Read8BitsFromRegister((byte)Register.INTERRUPT);
                 intLatch = (byte)((intLatch & (byte)Mask.INT_LATCH) >> 4);
-                return Convert.ToBoolean(intLatch);
+                return (InterruptLatch)intLatch;
             }
             set
             {
                 var intLatch = Read8BitsFromRegister((byte)Register.INTERRUPT);
                 intLatch = (byte)(intLatch & ((byte)Mask.INT_LATCH ^ (byte)Mask.CLR));
-                intLatch = (byte)(intLatch | Convert.ToByte(value) << 4);
+                intLatch = (byte)(intLatch | (byte)value << 4);
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intLatch);
             }
@@ -352,7 +344,6 @@ namespace BH1745Driver
             timeoutWatch.Stop();
 
             // set measurement configuration
-            InterruptReset = true;
             MeasurementTime = MeasurementTime.Ms160;
             AdcGain = AdcGain.X1;
             MeasurementIsActive = true;
@@ -405,16 +396,11 @@ namespace BH1745Driver
             return BinaryPrimitives.ReadUInt16LittleEndian(bytes);
         }
 
-        // TODO: test!!! read from register
         private void WriteShortToRegister(byte register, ushort value)
         {
             var bytes = new byte[3];
-            var source = new byte[2];
+            var source = !BitConverter.IsLittleEndian ? BitConverter.GetBytes(value).Reverse().ToArray() : BitConverter.GetBytes(value);
 
-            // ensure order of bytes is little endian
-            if (!BitConverter.IsLittleEndian)
-                source = BitConverter.GetBytes(value).Reverse().ToArray();
-            
             bytes[0] = register;
             Buffer.BlockCopy(source, 0, bytes, 1, source.Length);
 
