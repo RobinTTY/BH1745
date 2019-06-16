@@ -158,7 +158,7 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:BH1745Driver.Bh1745.GetCompensatedColor">
+        <member name="M:BH1745Driver.Bh1745.GetColor">
             <summary>
             Gets the compensated color reading from the sensor.
             </summary>

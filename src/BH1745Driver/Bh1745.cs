@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Device.I2c;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 
 namespace BH1745Driver
@@ -357,26 +358,26 @@ namespace BH1745Driver
         }
 
         /// <summary>
-        /// Gets the uncompensated color reading from the sensor.
-        /// </summary>
-        /// <returns></returns>
-        public Bh1745Color GetUncompensatedColor()
-        {
-            return new Bh1745Color(RedDataRegister, GreenDataRegister, BlueDataRegister, ClearDataRegister);
-        }
-
-        /// <summary>
         /// Gets the compensated color reading from the sensor.
         /// </summary>
         /// <returns></returns>
-        public Bh1745Color GetCompensatedColor()
+        public Color GetColor()
         {
+            if (!(ClearDataRegister > 0))
+                return Color.FromArgb(0, 0, 0);
+
+            // apply channel multipliers
             var compensatedRed = RedDataRegister * ChannelCompensationMultipliers.Red;
             var compensatedGreen = GreenDataRegister * ChannelCompensationMultipliers.Green;
             var compensatedBlue = BlueDataRegister * ChannelCompensationMultipliers.Blue;
             var compensatedClear = ClearDataRegister * ChannelCompensationMultipliers.Clear;
 
-            return new Bh1745Color(compensatedRed, compensatedGreen, compensatedBlue, compensatedClear);
+            // scale against clear channel
+            var redScaled = (int)Math.Min(255, compensatedRed / compensatedClear * 255);
+            var greenScaled = (int)Math.Min(255, compensatedGreen / compensatedClear * 255);
+            var blueScaled = (int)Math.Min(255, compensatedBlue / compensatedClear * 255);
+
+            return Color.FromArgb(redScaled, greenScaled, blueScaled);
         }
 
         private byte Read8BitsFromRegister(byte register)
