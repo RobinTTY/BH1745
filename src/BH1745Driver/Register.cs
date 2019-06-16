@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BH1745Driver
+﻿namespace BH1745Driver
 {
     internal enum Register : byte
     {

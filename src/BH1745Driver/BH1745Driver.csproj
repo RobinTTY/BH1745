@@ -13,10 +13,15 @@
     <RepositoryUrl>https://github.com/RobinTTY/BH1745</RepositoryUrl>
     <PackageTags>ROHM Bh1745 Sensor Color IoT I²C</PackageTags>
     <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>F:\misc\BH1745\src\BH1745Driver\Bh1745Driver.xml</DocumentationFile>
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>C:\Projects\C#\BH1745\src\BH1745Driver\BH1745Driver.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
