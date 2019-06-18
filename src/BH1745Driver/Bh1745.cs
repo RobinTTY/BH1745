@@ -37,8 +37,7 @@ namespace BH1745Driver
             set
             {
                 var status = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
-                status = (byte)(status & ((byte)Mask.SW_RESET ^ (byte)Mask.CLR));
-                status = (byte)(status | Convert.ToByte(value) << 7);
+                status = (byte)(((status & (byte)~Mask.SW_RESET) | Convert.ToByte(value)) << 7);
 
                 Write8BitsToRegister((byte)Register.SYSTEM_CONTROL, status);
             }
@@ -62,8 +61,7 @@ namespace BH1745Driver
                     throw new ArgumentOutOfRangeException();
 
                 var intReset = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
-                intReset = (byte)(intReset & ((byte)Mask.INT_RESET ^ (byte)Mask.CLR));
-                intReset = (byte)(intReset | (byte)value << 6);
+                intReset = (byte)(((intReset & (byte)~Mask.INT_RESET) | (byte)value) << 6);
 
                 Write8BitsToRegister((byte)Register.SYSTEM_CONTROL, intReset);
             }
@@ -87,23 +85,9 @@ namespace BH1745Driver
                     throw new ArgumentOutOfRangeException();
 
                 var time = Read8BitsFromRegister((byte)Register.MODE_CONTROL1);
-                time = (byte)(time & ((byte)Mask.MEASUREMENT_TIME ^ (byte)Mask.CLR));
-                time = (byte)(time | (byte)value);
+                time = (byte)((time & (byte)~Mask.MEASUREMENT_TIME) | (byte)value);
 
                 Write8BitsToRegister((byte)Register.MODE_CONTROL1, time);
-            }
-        }
-
-        /// <summary>
-        /// Gets whether the last measurement is valid.
-        /// </summary>
-        public bool MeasurementIsValid
-        {
-            get
-            {
-                var valid = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
-                valid = (byte)(valid & (byte)Mask.VALID);
-                return Convert.ToBoolean(valid);
             }
         }
 
@@ -121,8 +105,7 @@ namespace BH1745Driver
             set
             {
                 var active = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
-                active = (byte)(active & ((byte)Mask.RGBC_EN ^ (byte)Mask.CLR));
-                active = (byte)(active | (Convert.ToByte(value) << 4));
+                active = (byte)(((active & (byte)~Mask.RGBC_EN) | Convert.ToByte(value)) << 4);
 
                 Write8BitsToRegister((byte)Register.MODE_CONTROL2, active);
             }
@@ -146,8 +129,7 @@ namespace BH1745Driver
                     throw new ArgumentOutOfRangeException();
 
                 var adcGain = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
-                adcGain = (byte)(adcGain & ((byte)Mask.ADC_GAIN ^ (byte)Mask.CLR));
-                adcGain = (byte)(adcGain | (byte)value);
+                adcGain = (byte)((adcGain & (byte)~Mask.ADC_GAIN) | (byte)value);
 
                 Write8BitsToRegister((byte)Register.MODE_CONTROL2, adcGain);
             }
@@ -167,8 +149,7 @@ namespace BH1745Driver
             set
             {
                 var intStatus = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intStatus = (byte)(intStatus & ((byte)Mask.INT_STATUS ^ (byte)Mask.CLR));
-                intStatus = (byte)(intStatus | (Convert.ToByte(value) << 7));
+                intStatus = (byte)(((intStatus & (byte)~Mask.INT_STATUS) | Convert.ToByte(value)) << 7);
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intStatus);
             }
@@ -192,8 +173,7 @@ namespace BH1745Driver
                     throw new ArgumentOutOfRangeException();
 
                 var intLatch = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intLatch = (byte)(intLatch & ((byte)Mask.INT_LATCH ^ (byte)Mask.CLR));
-                intLatch = (byte)(intLatch | (byte)value << 4);
+                intLatch = (byte)(((intLatch & (byte)~Mask.INT_LATCH) | (byte)value) << 4);
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intLatch);
             }
@@ -213,8 +193,7 @@ namespace BH1745Driver
             set
             {
                 var intSource = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intSource = (byte)(intSource & ((byte)Mask.INT_SOURCE ^ (byte)Mask.CLR));
-                intSource = (byte)(intSource | (byte)value << 2);
+                intSource = (byte)(((intSource & (byte)~Mask.INT_SOURCE) | (byte)value) << 2);
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intSource);
             }
@@ -234,8 +213,8 @@ namespace BH1745Driver
             set
             {
                 var intPin = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intPin = (byte)(intPin & ((byte)Mask.INT_ENABLE ^ (byte)Mask.CLR));
-                intPin = (byte)(intPin | Convert.ToByte(value));
+                intPin = (byte)((intPin & (byte)~Mask.INT_ENABLE) | Convert.ToByte(value));
+
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intPin);
             }
@@ -255,10 +234,40 @@ namespace BH1745Driver
             set
             {
                 var intPersistence = Read8BitsFromRegister((byte)Register.PERSISTENCE);
-                intPersistence = (byte)(intPersistence & ((byte)Mask.PERSISTENCE ^ (byte)Mask.CLR));
-                intPersistence = (byte)(intPersistence | (byte)value);
-
+                intPersistence = (byte)((intPersistence & (byte)~Mask.PERSISTENCE) | (byte)value);
+                
                 Write8BitsToRegister((byte)Register.PERSISTENCE, intPersistence);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the lower interrupt threshold.
+        /// </summary>
+        public ushort LowerInterruptThreshold
+        {
+            get => Read16BitsFromRegister((byte)Register.TL);
+            set => WriteShortToRegister((byte)Register.TL, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the higher interrupt threshold.
+        /// </summary>
+        public ushort HigherInterruptThreshold
+        {
+            get => Read16BitsFromRegister((byte)Register.TH);
+            set => WriteShortToRegister((byte)Register.TH, value);
+        }
+
+        /// <summary>
+        /// Gets whether the last measurement is valid.
+        /// </summary>
+        public bool MeasurementIsValid
+        {
+            get
+            {
+                var valid = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
+                valid = (byte)(valid & (byte)Mask.VALID);
+                return Convert.ToBoolean(valid);
             }
         }
 
@@ -286,24 +295,6 @@ namespace BH1745Driver
         /// Gets the data in the dint data register. This register is used for internal calculation.
         /// </summary>
         public ushort DintDataRegister => Read16BitsFromRegister((byte)Register.DINT_DATA);
-
-        /// <summary>
-        /// Gets or sets the lower interrupt threshold.
-        /// </summary>
-        public ushort LowerInterruptThreshold
-        {
-            get => Read16BitsFromRegister((byte)Register.TL);
-            set => WriteShortToRegister((byte)Register.TL, value);
-        }
-
-        /// <summary>
-        /// Gets or sets the higher interrupt threshold.
-        /// </summary>
-        public ushort HigherInterruptThreshold
-        {
-            get => Read16BitsFromRegister((byte)Register.TH);
-            set => WriteShortToRegister((byte)Register.TH, value);
-        }
 
         /// <summary>
         /// Gets or sets the channel compensation multipliers which are used to compensate the measurements.
