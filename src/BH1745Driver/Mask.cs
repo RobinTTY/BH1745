@@ -16,8 +16,6 @@
         INT_SOURCE = 0x0C,
         INT_ENABLE = 0x01,
 
-        PERSISTENCE = 0x03,
-
-        CLR = 0xFF
+        PERSISTENCE = 0x03
     }
 }
