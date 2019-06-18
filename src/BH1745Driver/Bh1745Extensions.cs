@@ -11,26 +11,18 @@ namespace BH1745Driver
         /// Converts the enum Measurement time to an integer representing the measurement time in ms.
         /// </summary>
         /// <param name="time">The MeasurementTime.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when a not supported MeasurementTime is used.</exception>
         /// <returns></returns>
-        public static int ToMilliseconds(this MeasurementTime time)
-        {
-            switch (time)
+        public static int ToMilliseconds(this MeasurementTime time) =>
+            time switch
             {
-                case MeasurementTime.Ms160:
-                    return 160;
-                case MeasurementTime.Ms320:
-                    return 320;
-                case MeasurementTime.Ms640:
-                    return 640;
-                case MeasurementTime.Ms1280:
-                    return 1280;
-                case MeasurementTime.Ms2560:
-                    return 2560;
-                case MeasurementTime.Ms5120:
-                    return 5120;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(time), time, null);
-            }
-        }
+                MeasurementTime.Ms160 => 160,
+                MeasurementTime.Ms320 => 320,
+                MeasurementTime.Ms640 => 640,
+                MeasurementTime.Ms1280 => 1280,
+                MeasurementTime.Ms2560 => 2560,
+                MeasurementTime.Ms5120 => 5120,
+                _ => throw new ArgumentOutOfRangeException()
+            };
     }
 }
