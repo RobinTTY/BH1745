@@ -1,6 +1,6 @@
 ﻿namespace BH1745Driver
 {
-    /// <summary>
+/// <summary>
     /// Represents the configuration for the interrupt persistence functionality of the Bh1745.
     /// </summary>
     public enum InterruptPersistence : byte
@@ -49,7 +49,7 @@
     /// <summary>
     /// Represents the latch behavior of the interrupt pin of the Bh1745.
     /// </summary>
-    public enum InterruptLatch : byte
+    public enum LatchBehavior : byte
     {
         /// <summary>
         /// Interrupt pin is latched until interrupt register is read or initialized.

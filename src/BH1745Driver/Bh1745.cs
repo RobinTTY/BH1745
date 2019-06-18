@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Device.I2c;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 
@@ -48,6 +47,7 @@ namespace BH1745Driver
         /// <summary>
         /// Gets or sets the state of the interrupt pin.
         /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if invalid InterruptStatus is set.</exception>
         public InterruptStatus InterruptReset
         {
             get
@@ -58,6 +58,9 @@ namespace BH1745Driver
             }
             set
             {
+                if (!Enum.IsDefined(typeof(InterruptStatus), value))
+                    throw new ArgumentOutOfRangeException();
+
                 var intReset = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
                 intReset = (byte)(intReset & ((byte)Mask.INT_RESET ^ (byte)Mask.CLR));
                 intReset = (byte)(intReset | (byte)value << 6);
@@ -69,6 +72,7 @@ namespace BH1745Driver
         /// <summary>
         /// Gets or sets the currently set measurement time.
         /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if invalid MeasurementTime is set.</exception>
         public MeasurementTime MeasurementTime
         {
             get
@@ -79,6 +83,9 @@ namespace BH1745Driver
             }
             set
             {
+                if (!Enum.IsDefined(typeof(MeasurementTime), value))
+                    throw new ArgumentOutOfRangeException();
+
                 var time = Read8BitsFromRegister((byte)Register.MODE_CONTROL1);
                 time = (byte)(time & ((byte)Mask.MEASUREMENT_TIME ^ (byte)Mask.CLR));
                 time = (byte)(time | (byte)value);
@@ -124,6 +131,7 @@ namespace BH1745Driver
         /// <summary>
         /// Gets or sets the adc gain of the sensor.
         /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if invalid AdcGain is set.</exception>
         public AdcGain AdcGain
         {
             get
@@ -134,6 +142,9 @@ namespace BH1745Driver
             }
             set
             {
+                if (!Enum.IsDefined(typeof(AdcGain), value))
+                    throw new ArgumentOutOfRangeException();
+
                 var adcGain = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
                 adcGain = (byte)(adcGain & ((byte)Mask.ADC_GAIN ^ (byte)Mask.CLR));
                 adcGain = (byte)(adcGain | (byte)value);
@@ -166,16 +177,20 @@ namespace BH1745Driver
         /// <summary>
         /// Gets or sets how the interrupt pin latches.
         /// </summary>
-        public InterruptLatch InterruptLatch
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if invalid LatchBehavior is set.</exception>
+        public LatchBehavior LatchBehavior
         {
             get
             {
                 var intLatch = Read8BitsFromRegister((byte)Register.INTERRUPT);
                 intLatch = (byte)((intLatch & (byte)Mask.INT_LATCH) >> 4);
-                return (InterruptLatch)intLatch;
+                return (LatchBehavior)intLatch;
             }
             set
             {
+                if(!Enum.IsDefined(typeof(LatchBehavior), value))
+                    throw new ArgumentOutOfRangeException();
+
                 var intLatch = Read8BitsFromRegister((byte)Register.INTERRUPT);
                 intLatch = (byte)(intLatch & ((byte)Mask.INT_LATCH ^ (byte)Mask.CLR));
                 intLatch = (byte)(intLatch | (byte)value << 4);
@@ -325,6 +340,7 @@ namespace BH1745Driver
         /// <summary>
         /// Initializes the device.
         /// </summary>
+        /// <exception cref="TimeoutException">Thrown if software reset takes too long.</exception>
         public void Init()
         {
             // check manufacturer and part Id
@@ -333,16 +349,10 @@ namespace BH1745Driver
             if (PartId != 0x0b)
                 throw new Exception($"Part ID {PartId} is not the same as expected 11. Please check if you are using the right device.");
 
-            // soft reset sensor
-            var timeoutWatch = new Stopwatch();
-            timeoutWatch.Start();
+            // soft reset sensor (not specified how long this takes but duration is < 1ms and done before read takes place)
             SoftwareReset = true;
-            while (SoftwareReset)
-            {
-                if (timeoutWatch.ElapsedMilliseconds > 10)
-                    throw new TimeoutException("Software reset is taking unusually long. Check your device connection.");
-            }
-            timeoutWatch.Stop();
+            if (SoftwareReset)
+                throw new TimeoutException("Software reset is taking unusually long. Check your device connection.");
 
             // set measurement configuration
             MeasurementTime = MeasurementTime.Ms160;
@@ -361,16 +371,16 @@ namespace BH1745Driver
         /// Gets the compensated color reading from the sensor.
         /// </summary>
         /// <returns></returns>
-        public Color GetColor()
+        public Color GetCompensatedColor()
         {
             if (!(ClearDataRegister > 0))
                 return Color.FromArgb(0, 0, 0);
 
-            // apply channel multipliers
-            var compensatedRed = RedDataRegister * ChannelCompensationMultipliers.Red;
-            var compensatedGreen = GreenDataRegister * ChannelCompensationMultipliers.Green;
-            var compensatedBlue = BlueDataRegister * ChannelCompensationMultipliers.Blue;
-            var compensatedClear = ClearDataRegister * ChannelCompensationMultipliers.Clear;
+            // apply channel multipliers and normalize
+            var compensatedRed = RedDataRegister * ChannelCompensationMultipliers.Red / MeasurementTime.ToMilliseconds() * 360;
+            var compensatedGreen = GreenDataRegister * ChannelCompensationMultipliers.Green / MeasurementTime.ToMilliseconds() * 360;
+            var compensatedBlue = BlueDataRegister * ChannelCompensationMultipliers.Blue / MeasurementTime.ToMilliseconds() * 360;
+            var compensatedClear = ClearDataRegister * ChannelCompensationMultipliers.Clear / MeasurementTime.ToMilliseconds() * 360;
 
             // scale against clear channel
             var redScaled = (int)Math.Min(255, compensatedRed / compensatedClear * 255);
