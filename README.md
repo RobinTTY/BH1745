@@ -8,7 +8,7 @@ The datasheet can be found [here](https://www.mouser.co.uk/datasheet/2/348/bh174
 
 ## Example on how to use this library
 
-The easiest way to use this library is by getting it from nuget: https://www.nuget.org/packages/BH1745Driver/
+The easiest way to use this library is by getting it from nuget: https://www.nuget.org/packages/BH1745Driver/  
 You can also build it and reference it as dependency in your project or copy all the files to your project. 
 
 You can either use the default settings of the sensor or change them for more precise results.
