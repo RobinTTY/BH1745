@@ -49,19 +49,14 @@
         <member name="P:BH1745Driver.Bh1745.InterruptReset">
             <summary>
             Gets or sets the state of the interrupt pin.
-            False is the default state in which the interrupt pin is not initialized (active).
-            True is used to set the pin to high impedance (inactive).
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if invalid InterruptStatus is set.</exception>
         </member>
         <member name="P:BH1745Driver.Bh1745.MeasurementTime">
             <summary>
             Gets or sets the currently set measurement time.
             </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.MeasurementIsValid">
-            <summary>
-            Gets whether the last measurement is valid.
-            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if invalid MeasurementTime is set.</exception>
         </member>
         <member name="P:BH1745Driver.Bh1745.MeasurementIsActive">
             <summary>
@@ -72,19 +67,18 @@
             <summary>
             Gets or sets the adc gain of the sensor.
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if invalid AdcGain is set.</exception>
         </member>
-        <member name="P:BH1745Driver.Bh1745.InterruptLatch">
+        <member name="P:BH1745Driver.Bh1745.InterruptSignalIsActive">
             <summary>
-            Gets or sets the status of the interrupt signal.
-            True indicates an active interrupt signal, false an inactive signal.
+            Gets or sets whether the interrupt signal is active.
             </summary>
         </member>
-        <member name="P:BH1745Driver.Bh1745.InterruptLatch">
+        <member name="P:BH1745Driver.Bh1745.LatchBehavior">
             <summary>
             Gets or sets how the interrupt pin latches.
-            False indicates that the interrupt pin is latched until interrupt register is read
-            or initialized. True indicates that the pin is latched after each measurement.
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown if invalid LatchBehavior is set.</exception>
         </member>
         <member name="P:BH1745Driver.Bh1745.InterruptSource">
             <summary>
@@ -99,6 +93,21 @@
         <member name="P:BH1745Driver.Bh1745.InterruptPersistence">
             <summary>
             Gets or sets the persistence function of the interrupt.
+            </summary>
+        </member>
+        <member name="P:BH1745Driver.Bh1745.LowerInterruptThreshold">
+            <summary>
+            Gets or sets the lower interrupt threshold.
+            </summary>
+        </member>
+        <member name="P:BH1745Driver.Bh1745.HigherInterruptThreshold">
+            <summary>
+            Gets or sets the higher interrupt threshold.
+            </summary>
+        </member>
+        <member name="P:BH1745Driver.Bh1745.MeasurementIsValid">
+            <summary>
+            Gets whether the last measurement is valid.
             </summary>
         </member>
         <member name="P:BH1745Driver.Bh1745.RedDataRegister">
@@ -126,16 +135,6 @@
             Gets the data in the dint data register. This register is used for internal calculation.
             </summary>
         </member>
-        <member name="P:BH1745Driver.Bh1745.LowerInterruptThreshold">
-            <summary>
-            Gets or sets the lower interrupt threshold.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.HigherInterruptThreshold">
-            <summary>
-            Gets or sets the higher interrupt threshold.
-            </summary>
-        </member>
         <member name="P:BH1745Driver.Bh1745.ChannelCompensationMultipliers">
             <summary>
             Gets or sets the channel compensation multipliers which are used to compensate the measurements.
@@ -151,14 +150,9 @@
             <summary>
             Initializes the device.
             </summary>
+            <exception cref="T:System.TimeoutException">Thrown if software reset takes too long.</exception>
         </member>
-        <member name="M:BH1745Driver.Bh1745.GetUncompensatedColor">
-            <summary>
-            Gets the uncompensated color reading from the sensor.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:BH1745Driver.Bh1745.GetColor">
+        <member name="M:BH1745Driver.Bh1745.GetCompensatedColor">
             <summary>
             Gets the compensated color reading from the sensor.
             </summary>
@@ -168,52 +162,6 @@
             <summary>
             Disposes the Bh1745 resources.
             </summary>
-        </member>
-        <member name="T:BH1745Driver.Bh1745Color">
-            <summary>
-            Color values measured from a Bh1745 sensor.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745Color.Red">
-            <summary>
-            Red color channel value.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745Color.Green">
-            <summary>
-            Green color channel value.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745Color.Blue">
-            <summary>
-            Blue color channel value.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745Color.Clear">
-            <summary>
-            Clear color channel value.
-            </summary>
-        </member>
-        <member name="M:BH1745Driver.Bh1745Color.#ctor(System.Double,System.Double,System.Double,System.Double)">
-            <summary>
-            RGBC value representing a color.
-            </summary>
-            <param name="red">The red color portion.</param>
-            <param name="green">The green color portion.</param>
-            <param name="blue">The blue color portion.</param>
-            <param name="clear">The clear color portion.</param>
-        </member>
-        <member name="M:BH1745Driver.Bh1745Color.GetScaled">
-            <summary>
-            Returns a BH1745Color scaled against the clear channel.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:BH1745Driver.Bh1745Color.ToColor">
-            <summary>
-            Converts the Bh1745Color to a Color.
-            </summary>
-            <returns></returns>
         </member>
         <member name="T:BH1745Driver.Bh1745Extensions">
             <summary>
@@ -225,6 +173,7 @@
             Converts the enum Measurement time to an integer representing the measurement time in ms.
             </summary>
             <param name="time">The MeasurementTime.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Thrown when a not supported MeasurementTime is used.</exception>
             <returns></returns>
         </member>
         <member name="T:BH1745Driver.ChannelCompensationMultipliers">
@@ -300,6 +249,37 @@
         <member name="F:BH1745Driver.InterruptSource.ClearChannel">
             <summary>
             The clear color channel. 
+            </summary>
+        </member>
+        <member name="T:BH1745Driver.LatchBehavior">
+            <summary>
+            Represents the latch behavior of the interrupt pin of the Bh1745.
+            </summary>
+        </member>
+        <member name="F:BH1745Driver.LatchBehavior.LatchUntilReadOrInitialized">
+            <summary>
+            Interrupt pin is latched until interrupt register is read or initialized.
+            or initialized.
+            </summary>
+        </member>
+        <member name="F:BH1745Driver.LatchBehavior.LatchEachMeasurement">
+            <summary>
+            Interrupt pin is latched after each measurement
+            </summary>
+        </member>
+        <member name="T:BH1745Driver.InterruptStatus">
+            <summary>
+            Represents the state of the interrupt pin of the Bh1745.
+            </summary>
+        </member>
+        <member name="F:BH1745Driver.InterruptStatus.Active">
+            <summary>
+            Default state in which the interrupt pin is not initialized (active).
+            </summary>
+        </member>
+        <member name="F:BH1745Driver.InterruptStatus.Inactive">
+            <summary>
+            Sets the pin to high impedance (inactive).
             </summary>
         </member>
         <member name="T:BH1745Driver.MeasurementTime">
