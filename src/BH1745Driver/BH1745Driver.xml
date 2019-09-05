@@ -29,6 +29,12 @@
             Digital color sensor Bh1745.
             </summary>
         </member>
+        <member name="M:BH1745Driver.Bh1745.#ctor(System.Device.I2c.I2cDevice)">
+            <summary>
+            Digital color sensor Bh1745.
+            </summary>
+            <param name="device">The used I2c communication device.</param>
+        </member>
         <member name="F:BH1745Driver.Bh1745.DefaultI2cAddress">
             <summary>
             The primary I2c address of the BH1745
@@ -37,13 +43,6 @@
         <member name="F:BH1745Driver.Bh1745.SecondaryI2cAddress">
             <summary>
             The secondary I2c address of the BH1745
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.SoftwareReset">
-            <summary>
-            Gets or sets the state of the software reset.
-            True indicates that the initial reset is started, false that it is not started.
-            On reset all registers are reset and the sensor goes to power down mode.
             </summary>
         </member>
         <member name="P:BH1745Driver.Bh1745.InterruptReset">
@@ -71,7 +70,7 @@
         </member>
         <member name="P:BH1745Driver.Bh1745.InterruptSignalIsActive">
             <summary>
-            Gets or sets whether the interrupt signal is active.
+            Gets whether the interrupt signal is active.
             </summary>
         </member>
         <member name="P:BH1745Driver.Bh1745.LatchBehavior">
@@ -105,52 +104,45 @@
             Gets or sets the higher interrupt threshold.
             </summary>
         </member>
-        <member name="P:BH1745Driver.Bh1745.MeasurementIsValid">
-            <summary>
-            Gets whether the last measurement is valid.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.RedDataRegister">
-            <summary>
-            Gets the data in the red data register.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.GreenDataRegister">
-            <summary>
-            Gets the data in the green data register.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.BlueDataRegister">
-            <summary>
-            Gets the data in the blue data register.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.ClearDataRegister">
-            <summary>
-            Gets the data in the clear data register.
-            </summary>
-        </member>
-        <member name="P:BH1745Driver.Bh1745.DintDataRegister">
-            <summary>
-            Gets the data in the dint data register. This register is used for internal calculation.
-            </summary>
-        </member>
         <member name="P:BH1745Driver.Bh1745.ChannelCompensationMultipliers">
             <summary>
             Gets or sets the channel compensation multipliers which are used to compensate the measurements.
             </summary>
         </member>
-        <member name="M:BH1745Driver.Bh1745.#ctor(System.Device.I2c.I2cDevice)">
+        <member name="M:BH1745Driver.Bh1745.Reset">
             <summary>
-            Digital color sensor Bh1745.
+            Resets the device to the default configuration.
+            On reset the sensor goes to power down mode.
             </summary>
-            <param name="device">The used I2c communication device.</param>
         </member>
-        <member name="M:BH1745Driver.Bh1745.Init">
+        <member name="M:BH1745Driver.Bh1745.ReadMeasurementIsValid">
             <summary>
-            Initializes the device.
+            Reads whether the last measurement is valid.
             </summary>
-            <exception cref="T:System.TimeoutException">Thrown if software reset takes too long.</exception>
+        </member>
+        <member name="M:BH1745Driver.Bh1745.ReadRedDataRegister">
+            <summary>
+            Reads the red data register of the sensor.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:BH1745Driver.Bh1745.ReadGreenDataRegister">
+            <summary>
+            Reads the green data register of the sensor.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:BH1745Driver.Bh1745.ReadBlueDataRegister">
+            <summary>
+            Reads the blue data register of the sensor.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:BH1745Driver.Bh1745.ReadClearDataRegister">
+            <summary>
+            Reads the clear data register of the sensor.
+            </summary>
+            <returns></returns>
         </member>
         <member name="M:BH1745Driver.Bh1745.GetCompensatedColor">
             <summary>

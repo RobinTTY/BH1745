@@ -11,6 +11,39 @@ namespace BH1745Driver
     /// </summary>
     public class Bh1745 : IDisposable
     {
+        private byte ManufacturerId => Read8BitsFromRegister((byte)Register.MANUFACTURER_ID);
+        private byte PartId => (byte)(Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL) & (byte)Mask.PART_ID);
+
+        private I2cDevice _i2cDevice;
+        private MeasurementTime _measurementTime;
+        private bool _measurementIsActive;
+        private AdcGain _adcGain;
+        private LatchBehavior _latchBehavior;
+        private InterruptSource _interruptSource;
+        private bool _interruptIsEnabled;
+        private InterruptPersistence _interruptPersistence;
+        private ushort _lowerInterruptThreshold;
+        private ushort _higherInterruptThreshold;
+
+        /// <summary>
+        /// Digital color sensor Bh1745.
+        /// </summary>
+        /// <param name="device">The used I2c communication device.</param>
+        public Bh1745(I2cDevice device)
+        {
+            _i2cDevice = device;
+            ChannelCompensationMultipliers = new ChannelCompensationMultipliers
+            {
+                Red = 2.2,
+                Green = 1.0,
+                Blue = 1.8,
+                Clear = 10.0
+            };
+
+            // reset device and set default configuration
+            InitDevice();
+        }
+
         /// <summary>
         /// The primary I2c address of the BH1745
         /// </summary>
@@ -20,28 +53,6 @@ namespace BH1745Driver
         /// The secondary I2c address of the BH1745
         /// </summary>
         public const byte SecondaryI2cAddress = 0x39;
-
-        /// <summary>
-        /// Gets or sets the state of the software reset.
-        /// True indicates that the initial reset is started, false that it is not started.
-        /// On reset all registers are reset and the sensor goes to power down mode.
-        /// </summary>
-        public bool SoftwareReset
-        {
-            get
-            {
-                var status = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
-                status = (byte)((status & (byte)Mask.SW_RESET) >> 7);
-                return Convert.ToBoolean(status);
-            }
-            set
-            {
-                var status = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
-                status = (byte)((status & (byte)~Mask.SW_RESET) | Convert.ToByte(value) << 7);
-
-                Write8BitsToRegister((byte)Register.SYSTEM_CONTROL, status);
-            }
-        }
 
         /// <summary>
         /// Gets or sets the state of the interrupt pin.
@@ -73,12 +84,7 @@ namespace BH1745Driver
         /// <exception cref="ArgumentOutOfRangeException">Thrown if invalid MeasurementTime is set.</exception>
         public MeasurementTime MeasurementTime
         {
-            get
-            {
-                var time = Read8BitsFromRegister((byte)Register.MODE_CONTROL1);
-                time = (byte)(time & (byte)Mask.MEASUREMENT_TIME);
-                return (MeasurementTime)time;
-            }
+            get => _measurementTime;
             set
             {
                 if (!Enum.IsDefined(typeof(MeasurementTime), value))
@@ -88,6 +94,7 @@ namespace BH1745Driver
                 time = (byte)((time & (byte)~Mask.MEASUREMENT_TIME) | (byte)value);
 
                 Write8BitsToRegister((byte)Register.MODE_CONTROL1, time);
+                _measurementTime = value;
             }
         }
 
@@ -96,18 +103,14 @@ namespace BH1745Driver
         /// </summary>
         public bool MeasurementIsActive
         {
-            get
-            {
-                var active = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
-                active = (byte)((active & (byte)Mask.RGBC_EN) >> 4);
-                return Convert.ToBoolean(active);
-            }
+            get => _measurementIsActive;
             set
             {
                 var active = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
                 active = (byte)((active & (byte)~Mask.RGBC_EN) | Convert.ToByte(value) << 4);
 
                 Write8BitsToRegister((byte)Register.MODE_CONTROL2, active);
+                _measurementIsActive = value;
             }
         }
 
@@ -117,12 +120,7 @@ namespace BH1745Driver
         /// <exception cref="ArgumentOutOfRangeException">Thrown if invalid AdcGain is set.</exception>
         public AdcGain AdcGain
         {
-            get
-            {
-                var adcGain = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
-                adcGain = (byte)(adcGain & (byte)Mask.ADC_GAIN);
-                return (AdcGain)adcGain;
-            }
+            get => _adcGain;
             set
             {
                 if (!Enum.IsDefined(typeof(AdcGain), value))
@@ -132,11 +130,12 @@ namespace BH1745Driver
                 adcGain = (byte)((adcGain & (byte)~Mask.ADC_GAIN) | (byte)value);
 
                 Write8BitsToRegister((byte)Register.MODE_CONTROL2, adcGain);
+                _adcGain = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets whether the interrupt signal is active.
+        /// Gets whether the interrupt signal is active.
         /// </summary>
         public bool InterruptSignalIsActive
         {
@@ -146,13 +145,6 @@ namespace BH1745Driver
                 intStatus = (byte)((intStatus & (byte)Mask.INT_STATUS) >> 7);
                 return Convert.ToBoolean(intStatus);
             }
-            set
-            {
-                var intStatus = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intStatus = (byte)((intStatus & (byte)~Mask.INT_STATUS) | Convert.ToByte(value) << 7);
-
-                Write8BitsToRegister((byte)Register.INTERRUPT, intStatus);
-            }
         }
 
         /// <summary>
@@ -161,21 +153,17 @@ namespace BH1745Driver
         /// <exception cref="ArgumentOutOfRangeException">Thrown if invalid LatchBehavior is set.</exception>
         public LatchBehavior LatchBehavior
         {
-            get
-            {
-                var intLatch = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intLatch = (byte)((intLatch & (byte)Mask.INT_LATCH) >> 4);
-                return (LatchBehavior)intLatch;
-            }
+            get => _latchBehavior;
             set
             {
-                if(!Enum.IsDefined(typeof(LatchBehavior), value))
+                if (!Enum.IsDefined(typeof(LatchBehavior), value))
                     throw new ArgumentOutOfRangeException();
 
                 var intLatch = Read8BitsFromRegister((byte)Register.INTERRUPT);
                 intLatch = (byte)((intLatch & (byte)~Mask.INT_LATCH) | (byte)value << 4);
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intLatch);
+                _latchBehavior = value;
             }
         }
 
@@ -184,18 +172,17 @@ namespace BH1745Driver
         /// </summary>
         public InterruptSource InterruptSource
         {
-            get
-            {
-                var intSource = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intSource = (byte)((intSource & (byte)Mask.INT_SOURCE) >> 2);
-                return (InterruptSource)intSource;
-            }
+            get => _interruptSource;
             set
             {
+                if (!Enum.IsDefined(typeof(InterruptSource), value))
+                    throw new ArgumentOutOfRangeException();
+
                 var intSource = Read8BitsFromRegister((byte)Register.INTERRUPT);
                 intSource = (byte)((intSource & (byte)~Mask.INT_SOURCE) | (byte)value << 2);
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intSource);
+                _interruptSource = value;
             }
         }
 
@@ -204,12 +191,7 @@ namespace BH1745Driver
         /// </summary>
         public bool InterruptIsEnabled
         {
-            get
-            {
-                var intPin = Read8BitsFromRegister((byte)Register.INTERRUPT);
-                intPin = (byte)(intPin & (byte)Mask.INT_ENABLE);
-                return Convert.ToBoolean(intPin);
-            }
+            get => _interruptIsEnabled;
             set
             {
                 var intPin = Read8BitsFromRegister((byte)Register.INTERRUPT);
@@ -217,6 +199,7 @@ namespace BH1745Driver
 
 
                 Write8BitsToRegister((byte)Register.INTERRUPT, intPin);
+                _interruptIsEnabled = value;
             }
         }
 
@@ -225,18 +208,17 @@ namespace BH1745Driver
         /// </summary>
         public InterruptPersistence InterruptPersistence
         {
-            get
-            {
-                var intPersistence = Read8BitsFromRegister((byte)Register.PERSISTENCE);
-                intPersistence = (byte)(intPersistence & (byte)Mask.PERSISTENCE);
-                return (InterruptPersistence)intPersistence;
-            }
+            get => _interruptPersistence;
             set
             {
+                if (!Enum.IsDefined(typeof(InterruptPersistence), value))
+                    throw new ArgumentOutOfRangeException();
+
                 var intPersistence = Read8BitsFromRegister((byte)Register.PERSISTENCE);
                 intPersistence = (byte)((intPersistence & (byte)~Mask.PERSISTENCE) | (byte)value);
-                
+
                 Write8BitsToRegister((byte)Register.PERSISTENCE, intPersistence);
+                _interruptPersistence = value;
             }
         }
 
@@ -245,8 +227,12 @@ namespace BH1745Driver
         /// </summary>
         public ushort LowerInterruptThreshold
         {
-            get => Read16BitsFromRegister((byte)Register.TL);
-            set => WriteShortToRegister((byte)Register.TL, value);
+            get => _lowerInterruptThreshold;
+            set
+            {
+                WriteShortToRegister((byte)Register.TL, value);
+                _lowerInterruptThreshold = value;
+            }
         }
 
         /// <summary>
@@ -254,109 +240,81 @@ namespace BH1745Driver
         /// </summary>
         public ushort HigherInterruptThreshold
         {
-            get => Read16BitsFromRegister((byte)Register.TH);
-            set => WriteShortToRegister((byte)Register.TH, value);
-        }
-
-        /// <summary>
-        /// Gets whether the last measurement is valid.
-        /// </summary>
-        public bool MeasurementIsValid
-        {
-            get
+            get => _higherInterruptThreshold;
+            set
             {
-                var valid = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
-                valid = (byte)(valid & (byte)Mask.VALID);
-                return Convert.ToBoolean(valid);
+                WriteShortToRegister((byte)Register.TH, value);
+                _higherInterruptThreshold = value;
             }
         }
-
-        /// <summary>
-        /// Gets the data in the red data register.
-        /// </summary>
-        public ushort RedDataRegister => Read16BitsFromRegister((byte)Register.RED_DATA);
-
-        /// <summary>
-        /// Gets the data in the green data register.
-        /// </summary>
-        public ushort GreenDataRegister => Read16BitsFromRegister((byte)Register.GREEN_DATA);
-
-        /// <summary>
-        /// Gets the data in the blue data register.
-        /// </summary>
-        public ushort BlueDataRegister => Read16BitsFromRegister((byte)Register.BLUE_DATA);
-
-        /// <summary>
-        /// Gets the data in the clear data register.
-        /// </summary>
-        public ushort ClearDataRegister => Read16BitsFromRegister((byte)Register.CLEAR_DATA);
-
-        /// <summary>
-        /// Gets the data in the dint data register. This register is used for internal calculation.
-        /// </summary>
-        public ushort DintDataRegister => Read16BitsFromRegister((byte)Register.DINT_DATA);
 
         /// <summary>
         /// Gets or sets the channel compensation multipliers which are used to compensate the measurements.
         /// </summary>
         public ChannelCompensationMultipliers ChannelCompensationMultipliers { get; set; }
 
-        private I2cDevice _i2cDevice;
-        private byte ManufacturerId => Read8BitsFromRegister((byte)Register.MANUFACTURER_ID);
-        private byte PartId
-        {
-            get
-            {
-                var id = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
-                return (byte)(id & (byte)Mask.PART_ID);
-            }
-        }
-
         /// <summary>
-        /// Digital color sensor Bh1745.
+        /// Resets the device to the default configuration.
+        /// On reset the sensor goes to power down mode.
         /// </summary>
-        /// <param name="device">The used I2c communication device.</param>
-        public Bh1745(I2cDevice device)
+        public void Reset()
         {
-            _i2cDevice = device;
-            ChannelCompensationMultipliers = new ChannelCompensationMultipliers
-            {
-                Red = 2.2,
-                Green = 1.0,
-                Blue = 1.8,
-                Clear = 10.0
-            };
-        }
+            var status = Read8BitsFromRegister((byte)Register.SYSTEM_CONTROL);
+            status = (byte)((status & (byte)~Mask.SW_RESET) | 0x01 << 7);
 
-        /// <summary>
-        /// Initializes the device.
-        /// </summary>
-        /// <exception cref="TimeoutException">Thrown if software reset takes too long.</exception>
-        public void Init()
-        {
-            // check manufacturer and part Id
-            if (ManufacturerId != 0xE0)
-                throw new Exception($"Manufacturer ID {ManufacturerId} is not the same as expected 224. Please check if you are using the right device.");
-            if (PartId != 0x0b)
-                throw new Exception($"Part ID {PartId} is not the same as expected 11. Please check if you are using the right device.");
+            Write8BitsToRegister((byte)Register.SYSTEM_CONTROL, status);
 
-            // soft reset sensor (not specified how long this takes but duration is < 1ms and done before read takes place)
-            SoftwareReset = true;
-            if (SoftwareReset)
-                throw new TimeoutException("Software reset is taking unusually long. Check your device connection.");
-
-            // set measurement configuration
+            // set default measurement configuration
             MeasurementTime = MeasurementTime.Ms160;
             AdcGain = AdcGain.X1;
             MeasurementIsActive = true;
+            InterruptIsEnabled = true;
 
-            // set thresholds
-            LowerInterruptThreshold = 0xFFFF;
-            HigherInterruptThreshold = 0x0000;
+            // set fields to reset state
+            _interruptPersistence = InterruptPersistence.UpdateMeasurementEnd;
+            _latchBehavior = LatchBehavior.LatchUntilReadOrInitialized;
+            _interruptSource = InterruptSource.RedChannel;
+            _interruptIsEnabled = false;
+            _lowerInterruptThreshold = 0x0000;
+            _higherInterruptThreshold = 0xFFFF;
 
             // write default value to Mode_Control3
             Write8BitsToRegister((byte)Register.MODE_CONTROL3, 0x02);
         }
+
+        /// <summary>
+        /// Reads whether the last measurement is valid.
+        /// </summary>
+        public bool ReadMeasurementIsValid()
+        {
+            var valid = Read8BitsFromRegister((byte)Register.MODE_CONTROL2);
+            valid = (byte)(valid & (byte)Mask.VALID);
+            return Convert.ToBoolean(valid);
+        }
+
+        /// <summary>
+        /// Reads the red data register of the sensor.
+        /// </summary>
+        /// <returns></returns>
+        public ushort ReadRedDataRegister() => Read16BitsFromRegister((byte)Register.RED_DATA);
+
+        /// <summary>
+        /// Reads the green data register of the sensor.
+        /// </summary>
+        /// <returns></returns>
+        public ushort ReadGreenDataRegister() => Read16BitsFromRegister((byte)Register.GREEN_DATA);
+
+        /// <summary>
+        /// Reads the blue data register of the sensor.
+        /// </summary>
+        /// <returns></returns>
+        public ushort ReadBlueDataRegister() => Read16BitsFromRegister((byte)Register.BLUE_DATA);
+
+        /// <summary>
+        /// Reads the clear data register of the sensor.
+        /// </summary>
+        /// <returns></returns>
+        public ushort ReadClearDataRegister() => Read16BitsFromRegister((byte)Register.CLEAR_DATA);
 
         /// <summary>
         /// Gets the compensated color reading from the sensor.
@@ -364,21 +322,34 @@ namespace BH1745Driver
         /// <returns></returns>
         public Color GetCompensatedColor()
         {
-            if (!(ClearDataRegister > 0))
+            var clearDataRaw = ReadClearDataRegister();
+            if (clearDataRaw == 0)
                 return Color.FromArgb(0, 0, 0);
 
             // apply channel multipliers and normalize
-            var compensatedRed = RedDataRegister * ChannelCompensationMultipliers.Red / MeasurementTime.ToMilliseconds() * 360;
-            var compensatedGreen = GreenDataRegister * ChannelCompensationMultipliers.Green / MeasurementTime.ToMilliseconds() * 360;
-            var compensatedBlue = BlueDataRegister * ChannelCompensationMultipliers.Blue / MeasurementTime.ToMilliseconds() * 360;
-            var compensatedClear = ClearDataRegister * ChannelCompensationMultipliers.Clear / MeasurementTime.ToMilliseconds() * 360;
+            double compensatedRed = ReadRedDataRegister() * ChannelCompensationMultipliers.Red / MeasurementTime.ToMilliseconds() * 360;
+            double compensatedGreen = ReadGreenDataRegister() * ChannelCompensationMultipliers.Green / MeasurementTime.ToMilliseconds() * 360;
+            double compensatedBlue = ReadBlueDataRegister() * ChannelCompensationMultipliers.Blue / MeasurementTime.ToMilliseconds() * 360;
+            double compensatedClear = clearDataRaw * ChannelCompensationMultipliers.Clear / MeasurementTime.ToMilliseconds() * 360;
 
             // scale against clear channel
-            var redScaled = (int)Math.Min(255, compensatedRed / compensatedClear * 255);
-            var greenScaled = (int)Math.Min(255, compensatedGreen / compensatedClear * 255);
-            var blueScaled = (int)Math.Min(255, compensatedBlue / compensatedClear * 255);
+            int redScaled = (int)Math.Min(255, compensatedRed / compensatedClear * 255);
+            int greenScaled = (int)Math.Min(255, compensatedGreen / compensatedClear * 255);
+            int blueScaled = (int)Math.Min(255, compensatedBlue / compensatedClear * 255);
 
             return Color.FromArgb(redScaled, greenScaled, blueScaled);
+        }
+
+        private void InitDevice()
+        {
+            // check manufacturer and part Id
+            if (ManufacturerId != 0xE0)
+                throw new Exception($"Manufacturer ID {ManufacturerId} is not the same as expected 224. Please check if you are using the right device.");
+            if (PartId != 0x0b)
+                throw new Exception($"Part ID {PartId} is not the same as expected 11. Please check if you are using the right device.");
+
+            // soft reset sensor
+            Reset();
         }
 
         private byte Read8BitsFromRegister(byte register)
@@ -411,7 +382,8 @@ namespace BH1745Driver
 
         private void Write8BitsToRegister(byte register, byte data)
         {
-            _i2cDevice.Write(new[] { register, data });
+            Span<byte> command = stackalloc[] { register, data };
+            _i2cDevice.Write(command);
         }
 
         /// <summary>

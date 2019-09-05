@@ -12,10 +12,14 @@
     <PackageProjectUrl>https://github.com/RobinTTY/BH1745</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RobinTTY/BH1745</RepositoryUrl>
     <PackageTags>ROHM Bh1745 Sensor Color IoT I²C</PackageTags>
-    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <PackageReleaseNotes>This update includes breaking API changes
+- Update gpio access dependency for platform independent device creation
+- Updat API to align library to Microsoft design recommendations
+- Fix minor bug</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <ApplicationIcon />
     <StartupObject />
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -27,7 +31,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Device.Gpio" Version="0.1.0-prerelease.19310.5" />
+    <PackageReference Include="System.Device.Gpio" Version="1.0.0-prerelease.19454.2" />
   </ItemGroup>
 
 </Project>
