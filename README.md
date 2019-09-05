@@ -63,7 +63,7 @@ class Program
             using (var i2cBh1745 = new Bh1745(i2cDevice))
             {
 
-                // multipliers affect the compensated values
+                // multipliers affect the compensated values, these can be used to gain better results
                 i2cBh1745.ChannelCompensationMultipliers.Red = 2.5;
                 i2cBh1745.ChannelCompensationMultipliers.Green = 0.9;
                 i2cBh1745.ChannelCompensationMultipliers.Blue = 1.9;
