@@ -99,4 +99,4 @@ class Program
     }
 ```
 
-You can find these examples in the [samples](src/BH1745/samples) folder.
+You can find these examples in the [samples](src/BH1745Driver/samples) folder.
