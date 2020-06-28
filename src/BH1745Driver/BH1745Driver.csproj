@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <Authors>Robin Mueller</Authors>
     <Company />
     <Product></Product>
@@ -20,6 +20,7 @@
     <ApplicationIcon />
     <StartupObject />
     <Version>1.1.0</Version>
+    <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -31,7 +32,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Device.Gpio" Version="1.0.0-prerelease.19454.2" />
+    <PackageReference Include="System.Device.Gpio" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="*.cs" />
   </ItemGroup>
 
 </Project>
